@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <div width = 100%>
+        <canvas id="can" width="400" height="400" style="background: black; margin: 0 auto;"></canvas>
+    </div>
+
+    <!--创建一个400*400的画布，背景颜色为黑色-->
+    <script>
+        // 创建渐变
+     /* */  
+
+        var sn = [42, 41], dz = 43, fx = 1, n, ctx = document.getElementById("can").getContext("2d");
+        //存放贪食蛇的坐标, 第一个是头, 最后一个是尾, 初始的蛇长度是2, 坐标[2, 2], [1, 2]
+        //食物的坐标, 初始[3, 2]
+        //蛇前进的方向
+        //蛇头位置
+        //在画布上画背景或者贪食蛇方格
+        // 第一个参数是坐标信息, 第二个是颜色信息(用来区分背景和蛇)
+
+        function draw(t, c) {
+            ctx.fillStyle = c;
+            // fillReact的签名是: fillRect(x: number, y: number, w: number, h: number): void;
+            // 所以画的方格的宽高都是18, 加上默认的lineWidth=1, 所以每个方格的长宽都是20
+            // 参数t用一个标量标志二维坐标信息, t % 20即t/20的余数部分表示横坐标是第几个方格
+            // <int>(t/20) 即t/20的商部分表示纵坐标是第几个方格
+            // 这意味着游戏画布宽度固定为20, 坐标为[0, 19]
+            // 需要注意的是纵坐标的方向向下
+            // 所以初始的贪食蛇`[42, 41]`的头和尾的实际坐标分别是[2, 2], [1, 2], 也就是在画布的右上方
+            // 所以最初的运动方向是向右
+            // 所以前进方向`fx`的含义是: -1向左, -20右上, 1向右, 20向下
+            ctx.fillRect(t % 20 * 20 + 1, ~~(t / 20) * 20 + 1, 18, 18);
+            // 监听用户按键, 按键时改变下一次paint时蛇的方向
+        }
+
+        // 生成渐变色
+        var grd=ctx.createLinearGradient(100,100,200,200);
+        grd.addColorStop(0,"#ccffff");  
+        grd.addColorStop(1,"#3333ff");  
+
+        var tmp = 0;
+        document.onkeydown = function (e) {
+            // 方向键 左, 上, 右, 下的keyCode分别为37, 38, 39, 40
+            // 如果用户按下这几个键, 会改变蛇头下一次的位置到对应的方向上
+            // 如果不是这几个键, 则不会变动
+
+        // 在JavaScript逻辑或中：
+        //1、只要 || 前面为 false,不管 || 后面是 true 还是 false，都返回 || 后面的值。
+        //2、只要 || 前面为 true, 不管 || 后面是 true 还是 false，都返回 || 前面的值。
+        // e || event -----兼容性写法
+            n = [-1, -20, 1, 20][(e || event).keyCode - 37] || fx; // 把按键值变为 左上右下：-1 -20 1 20
+           fx = sn[1] - sn[0] == n ? fx : n
+            //fx = sn[1] - sn[0] == (n = [-1, -20, 1, 20][(e || event).keyCode - 37] || fx) ? fx : n
+
+            // 如果按键的方向和蛇当前前进的方向相反, 则不改动
+            // 根据蛇的位置及运动方向更新画布
+
+            if((e||event).keyCode == 32)
+            {
+                tmp = !tmp;
+            }
+              
+
+        };
+        // !function== +function == ~function == 立即调用函数   (function(){})();
+        !function update() {         
+            // 蛇每前进一步, 只需要把蛇尾放到蛇头处即可
+            // 这里增加了蛇头
+      
+          // 更新蛇的位置
+            sn.unshift(n = sn[0] + fx);
+            if( n < 0 ) //碰到上墙
+                sn.unshift(n = 420 + sn[0] + fx);  // 穿过上墙从下墙进入    
+            if( n > 399) //碰到下墙 
+                sn.unshift(n = -420 + sn[0]  + fx);  // 穿过下墙从上墙进入
+            if(fx == -1 && n % 20 == 19)   //碰到左墙
+                sn.unshift(n = 21 +sn[0] + fx);     // 从左墙穿过右墙
+            if(fx == 1 && n % 20 == 0)     // 碰到右墙
+                sn.unshift(n = -21 +sn[0] + fx); 
+           // if (sn.indexOf(n, 1) > 0) // 碰到蛇身
+             //   return alert("GAME OVER");
+
+            // 更新蛇头
+           draw(n, grd);
+            if (n == dz) {
+                // 如果蛇头位置和食物的位置相同, 则更新食物的位置
+                // 新的食物的位置不能在蛇身上
+                while (sn.indexOf(dz = ~~(Math.random() * 400)) >= 0);
+                // 更新食物
+                draw(dz, "white");
+            } else
+                // 去掉蛇尾(画成背景)
+                draw(sn.pop(), "Black");
+
+                
+            // 每隔500ms更新  设置等级
+          /*   if(sn.length < 5)
+                setTimeout(arguments.callee, 200);    
+            else if(sn.length < 10)
+                setTimeout(arguments.callee, 150);
+            else if(sn.length < 15)
+                setTimeout(arguments.callee, 100);
+          */
+          // 空格键切换速度
+           if(tmp == 1)
+           {
+                setTimeout(arguments.callee, 100);
+               // alert("tmp1");
+           }
+           else{
+                setTimeout(arguments.callee, 200);
+           }
+           console.log(tmp);
+        }();
+
+
+
+    </script>
+</body>
+</html>
